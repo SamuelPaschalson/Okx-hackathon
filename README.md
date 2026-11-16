@@ -24,6 +24,17 @@ Conformance against the live TapeOut contracts (read-only, needs network):
 npm run test:onchain --workspace @lineage/core
 ```
 
+Contracts ([Foundry](https://book.getfoundry.sh)):
+
+```bash
+cd contracts
+forge test                                               # unit tests (offline)
+XLAYER_RPC=https://rpc.xlayer.tech forge test --match-contract Fork   # real TapeOut on a fork
+```
+
+On-chain mode for the web app: copy `apps/web/.env.example` to `.env.local` and
+set `VITE_LINEAGE_ADDRESS`. Without it the app runs in sandbox mode.
+
 ## Layout
 
 | Path | What |
@@ -35,11 +46,14 @@ npm run test:onchain --workspace @lineage/core
 | `packages/core/src/arena.ts` | The Pit: battle rules. |
 | `packages/core/src/tournament.ts` | Round-robin seasons. |
 | `packages/core/src/founders.ts` | Generation-0 creatures. |
-| `apps/web` | React + Vite + Tailwind UI. |
+| `apps/web` | React + Vite + Tailwind UI; `src/lib/chain/` is the viem layer. |
+| `contracts/src/Lineage.sol` | Eggs, hatching, lineage records, breed and stud fees. |
+| `contracts/script/Deploy.s.sol` | Creates the processor, deploys, stocks NAND, seeds founders. |
 
 ## Status
 
 - [x] Core engine, verified against 33 live circuits on X Layer mainnet
-- [x] Web app: hatchery, battle replay with brain scan, season rankings (local mode)
-- [ ] `Lineage.sol` + wallet: lay eggs / hatch on-chain (milestone 2)
-- [ ] Deploy to TapeOut DeWEB
+- [x] Web app: hatchery, battle replay with brain scan, season rankings
+- [x] `Lineage.sol` + wallet flow: lay, hatch, lineage verification, on-chain battle verification (tested on a mainnet fork)
+- [ ] Mainnet deploy (needs the operator wallet with ~0.01 OKB + 0.11 BEM)
+- [ ] Host the frontend on TapeOut DeWEB

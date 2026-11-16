@@ -49,42 +49,71 @@ deterministic arena where every decision is the circuit's own `eval()`.
 packages/core   pure TS, zero runtime deps — netlist codec, builder, genome,
                 breed, arena, tournament, identity. Unit + fuzz + on-chain tests.
 apps/web        React + Vite + Tailwind. Imports core source directly.
-contracts/      (milestone 2) Lineage.sol — eggs, hatching, lineage, fees.
+contracts/      Foundry: Lineage.sol (eggs, hatching, lineage, fees), mocks,
+                unit + mainnet-fork tests, deploy script. fixtures/ is generated
+                from core (`npm run fixtures --workspace @lineage/core`).
 ```
 
 No backend. Chain is the database; everything else is a deterministic function of it.
 
-## Milestone 2 — on-chain (next)
+## On-chain (milestone 2)
 
-**Setup (once, by us):** `createCPU("Lineage", "LNG", story, supply, mintPrice)`
-on the TapeOut factory → our transistors + circuits contracts. Tape out the 5
-founders as circuit ids 1–5.
+### TapeOut facts that shaped the contract (checked on a mainnet fork, Nov 2026)
 
-**`Lineage.sol`** (small, non-upgradeable):
+* TapeOut upgraded its factory after the Cerebr team's notes: **`createCPU` and
+  transistor `mint` (for new CPUs) are now nonpayable and charged in BEM**
+  (8 decimals; deploy 0.1 BEM, mint protocol fee 0.01 BEM per call).
+* `tapeout` is unchanged: exactly `TAPEOUT_FEE` (0.0013 OKB), burns 1 NAND per gate from the caller.
+* X Layer RPCs cap `eth_getLogs` at 100 blocks, so clients cannot rebuild state from events.
+
+### `contracts/src/Lineage.sol` (non-upgradeable, ~300 lines)
 
 ```
-layEgg(parentA, parentB) payable        // fee + stud fees; requires both are Lineage creatures
-  -> eggId; seed = keccak(prevrandao, blockhash(n-1), parents, sender, eggId)
-hatch(eggId, bytes netlist) payable     // only egg owner, within N blocks
-  -> mints NAND on our CPU, tapeout(netlist, 10, 3), records parents+seed,
-     transfers the Circuit NFT to the breeder
-setStudFee(circuitId, price)            // owner of a creature
-creature(circuitId) view -> (parentA, parentB, generation, seed, eggId)
+layEgg(parentA, parentB) payable   breed fee + stud fees (pull payments), exact value
+  -> eggId, seed = keccak(prevrandao, blockhash(n-1), parents, breeder, eggId, chainid)
+hatch(eggId, bytes netlist) payable   egg's breeder only, exact TAPEOUT_FEE
+  -> NAND-only 3..64 gates, tapeout from the contract's NAND stock,
+     record (parents, generation, seed), NFT to the breeder
+creatures(offset, limit) view      paged list incl. owner + netlist (replaces event scans)
+seedFounder / setBreedFee / setStudFee / withdraw / eggsOf / layCost / hatchCost / nandStock
 ```
 
-* The contract does not re-run `breed()` (too costly). Instead the client
-  re-derives every child from (parents, seed) and marks mismatches
-  "unverified lineage". Honest UI, zero extra gas.
-* Hatching through the contract = 2 transactions for the user (lay, hatch),
-  which is also the natural game loop (egg → hatch).
-* Gate cap enforced on hatch via `circuitInfo(id).gateCount <= 64`.
+* **NAND stock instead of per-hatch minting.** Because minting costs BEM, the
+  operator mints NAND in bulk once (mintPrice 0 → one 0.01 BEM fee for any
+  amount) and deposits it into Lineage. Players only ever pay OKB.
+  Top up when `nandStock()` runs low (each hatch uses 3–64).
+* The contract does not re-run `breed()` (too costly). Clients re-derive every
+  child from (parents, seed) and badge it "Lineage verified" or "unverified".
+* The breeder cannot pick the seed. A sequencer could bias `prevrandao`, but
+  every attempt costs a breed fee, which makes grinding uneconomic.
 
-**Web:** wallet connect (OKX Wallet / injected, viem + wagmi), read creatures via
-`TapedOut` events + `netlist(id)`, "Verify on-chain" button that replays a
-battle through `eval` (multicall per tick).
+### Verified so far
 
-**Deploy:** static build (59 kB gzip) to TapeOut **DeWEB** (`tape://`), so the
-game itself lives on X Layer.
+| Check | Where |
+|---|---|
+| 16 unit tests incl. reentrancy, stock exhaustion, malformed netlists, fuzz | `contracts/test/Lineage.t.sol` |
+| Real TapeOut on a mainnet fork: founders tape out; **on-chain `eval()` matches core on all 40 vectors**; lay + hatch | `contracts/test/LineageFork.t.sol` |
+| Deploy script rehearsed on a fork: **≈0.0066 OKB + 0.11 BEM** total | `contracts/script/Deploy.s.sol` |
+| Browser E2E on the fork: connect → lay → hatch → reload shows "Lineage verified" → battle verified on-chain | manual Playwright driver |
+
+### Web
+
+viem only (no wagmi). OKX Wallet first, then any injected wallet; adds/switches
+to X Layer. Without `VITE_LINEAGE_ADDRESS` the app stays in sandbox mode.
+Unhatched eggs are recovered from `eggsOf(account)`, so closing the tab between
+laying and hatching loses nothing.
+
+### Deploying (needs your wallet; not done yet)
+
+```bash
+cd contracts
+forge script script/Deploy.s.sol --rpc-url xlayer --account <keystore> --broadcast   # XLAYER_RPC=https://rpc.xlayer.tech
+```
+
+Rehearse first without `--broadcast` (or on `anvil --fork-url https://rpc.xlayer.tech`).
+Note: Anvil's default test account is EIP-7702-delegated on X Layer mainnet;
+rehearse with a fresh key. Then set `VITE_LINEAGE_ADDRESS` and deploy the static
+build to TapeOut **DeWEB**.
 
 ## Known trade-offs
 
@@ -94,4 +123,8 @@ game itself lives on X Layer.
 * Season results vary with the seed (2 legs per pair). More legs = more stable
   ranks at linear cost; tune once there are real populations.
 * TapeOut's X Layer contracts are upgradeable/unaudited and not on testnet;
-  development uses an anvil mainnet fork.
+  development uses an anvil mainnet fork. They changed fee mechanics during
+  this hackathon, so `Lineage` reads every fee live and the fork test is the
+  canary: run it before any deploy.
+* The web bundle is 160 kB gzip with viem (59 kB without). Worth trimming
+  before DeWEB if storage is priced per byte.

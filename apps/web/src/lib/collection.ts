@@ -20,6 +20,12 @@ export interface Creature {
   /** Breeding seed (bytes32 hex). Re-running breed(parents, seed) reproduces this creature. */
   seed?: string;
   bornAt: number;
+  /** On-chain only: TapeOut circuit id, current NFT owner, stud fee (wei). */
+  circuitId?: number;
+  owner?: string;
+  studFee?: bigint;
+  /** On-chain only: true when breed(parents, seed) reproduces this exact netlist. */
+  lineageVerified?: boolean;
 }
 
 export const nameOf = (c: Creature, id: Identity = identityOf(c.gates)) => c.title ?? id.name;
@@ -66,7 +72,11 @@ function isCreature(x: unknown): x is Creature {
   );
 }
 
-export function useCollection() {
+/**
+ * Sandbox creatures bred in this browser. When the chain is enabled the
+ * founders come from the contract instead, so `founders` is only used offline.
+ */
+export function useLocalCollection() {
   const [local, setLocal] = useState<Creature[]>(loadLocal);
 
   useEffect(() => saveLocal(local), [local]);
@@ -74,7 +84,7 @@ export function useCollection() {
   const add = useCallback((c: Creature) => setLocal((prev) => [...prev, c]), []);
   const release = useCallback((id: string) => setLocal((prev) => prev.filter((c) => c.id !== id)), []);
 
-  return { creatures: [...FOUNDER_CREATURES, ...local], add, release };
+  return { founders: FOUNDER_CREATURES, local, add, release };
 }
 
 /** 32 random bytes as hex. Local stand-in for the seed the Lineage contract assigns to an egg. */

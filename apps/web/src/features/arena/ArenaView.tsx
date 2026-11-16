@@ -6,6 +6,7 @@ import { nameOf, type Creature } from '../../lib/collection';
 import { Board } from './Board';
 import { BrainScan, type BrainScanProps } from './BrainScan';
 import { SPEEDS, useReplay } from './useReplay';
+import { VerifyOnChain } from './VerifyOnChain';
 
 interface Props {
   creatures: Creature[];
@@ -84,6 +85,9 @@ export function ArenaView({ creatures, challengerId }: Props) {
         />
 
         {replay.done && <Verdict result={result} fighters={fighters} />}
+        {a.circuitId !== undefined && b.circuitId !== undefined && (
+          <VerifyOnChain key={seed} circuitIds={[a.circuitId, b.circuitId]} frames={result.frames} />
+        )}
       </Panel>
 
       <FighterPanel

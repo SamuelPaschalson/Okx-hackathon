@@ -41,7 +41,9 @@ export function CreatureCard({ creature, selected, selectedLabel, onSelect, disa
       <div className="flex flex-wrap gap-1">
         {creature.source === 'founder' && <Badge tone="amber">Founder</Badge>}
         {creature.source === 'local' && <Badge>Local · not on-chain</Badge>}
-        {creature.source === 'chain' && <Badge tone="acid">On X Layer</Badge>}
+        {creature.source === 'chain' && <Badge tone="acid">Circuit #{creature.circuitId}</Badge>}
+        {creature.lineageVerified === true && <Badge tone="acid">Lineage verified</Badge>}
+        {creature.lineageVerified === false && <Badge tone="spark">Lineage unverified</Badge>}
       </div>
     </button>
   );
