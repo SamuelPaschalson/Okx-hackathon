@@ -3,7 +3,7 @@ import { Button } from './components/ui';
 import { ArenaView } from './features/arena/ArenaView';
 import { BreedLab } from './features/breed/BreedLab';
 import { Rankings } from './features/rankings/Rankings';
-import { chainEnabled } from './lib/chain/config';
+import { chainEnabled, isLocalFork } from './lib/chain/config';
 import { useChainCreatures, useWallet } from './lib/chain/hooks';
 import { loadPendingEggs, type PendingEgg } from './lib/chain/lineage';
 import { useLocalCollection } from './lib/collection';
@@ -89,6 +89,11 @@ export default function App() {
         </div>
       </header>
 
+      {chainEnabled && isLocalFork && (
+        <p className="mb-4 rounded-lg border border-amber/40 bg-surface p-3 text-sm text-amber">
+          Local test network (X Layer fork). Transactions here use test OKB and never touch real X Layer.
+        </p>
+      )}
       {wallet.error && (
         <p role="alert" className="mb-4 rounded-lg border border-spark/40 bg-surface p-3 text-sm text-spark">
           {wallet.error}

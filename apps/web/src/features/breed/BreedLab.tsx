@@ -133,8 +133,8 @@ export function BreedLab({ creatures, connection, connecting, onConnect, pending
                     ? 'The seed was fixed by the Lineage contract when the egg was laid, so nobody can reroll for a better child.'
                     : 'Sandbox egg: the child stays in this browser.'}
                 </p>
-                {phase.egg.layTx && (
-                  <a href={explorerTx(phase.egg.layTx)} target="_blank" rel="noreferrer" className="text-xs text-acid underline">
+                {phase.egg.layTx && explorerTx(phase.egg.layTx) && (
+                  <a href={explorerTx(phase.egg.layTx)!} target="_blank" rel="noreferrer" className="text-xs text-acid underline">
                     View egg transaction
                   </a>
                 )}
@@ -283,8 +283,8 @@ function Newborn({ child, txHash, creatures, onFight, onAgain }: NewbornProps) {
         {child.source === 'chain' && (
           <div className="mt-2 flex justify-center gap-2">
             <Badge tone="acid">Taped out on X Layer</Badge>
-            {txHash && (
-              <a href={explorerTx(txHash)} target="_blank" rel="noreferrer" className="text-xs text-acid underline">
+            {txHash && explorerTx(txHash) && (
+              <a href={explorerTx(txHash)!} target="_blank" rel="noreferrer" className="text-xs text-acid underline">
                 transaction
               </a>
             )}

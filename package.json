@@ -10,6 +10,11 @@
     "test": "npm run test --workspace @lineage/core",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev": "npm run dev --workspace @lineage/web",
-    "build": "npm run build --workspace @lineage/web"
+    "build": "npm run build --workspace @lineage/web",
+    "local:chain": "node scripts/local.mjs chain",
+    "local:deploy": "node scripts/local.mjs deploy",
+    "local:fund": "node scripts/local.mjs fund",
+    "test:contracts": "node scripts/local.mjs test-contracts",
+    "test:fork": "node scripts/local.mjs test-fork"
   }
 }

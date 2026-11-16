@@ -5,7 +5,7 @@ Creatures whose DNA is a real NAND circuit taped out on **X Layer** with
 to the Pit and watch it think, gate by gate. Every decision is reproducible
 with a free `eval()` call on-chain.
 
-X Layer TapeOut Accelerate hackathon entry. Design and roadmap: [docs/DESIGN.md](docs/DESIGN.md).
+X Layer TapeOut Accelerate hackathon entry. Design and roadmap: [docs/DESIGN.md](docs/DESIGN.md). **Step-by-step local testing: [docs/TESTING.md](docs/TESTING.md).**
 
 ## Quick start
 
