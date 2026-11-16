@@ -1,0 +1,15 @@
+{
+  "name": "lineage",
+  "private": true,
+  "description": "Lineage: creatures whose DNA is a TapeOut circuit on X Layer.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace @lineage/core",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "npm run dev --workspace @lineage/web",
+    "build": "npm run build --workspace @lineage/web"
+  }
+}

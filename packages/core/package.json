@@ -1,0 +1,21 @@
+{
+  "name": "@lineage/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Genome, breeding, arena and tournament logic for Lineage. Pure functions, no runtime dependencies.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:onchain": "vitest run test/onchain.test.ts --mode onchain",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.3",
+    "vitest": "^3.0.5"
+  }
+}
